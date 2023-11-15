@@ -8,7 +8,7 @@ let main args =
     let text = IO.File.ReadAllText file
     match parse text with
     | Some ast ->
-        //let svg = eval ast
+        let svg = eval ast
         //printfn "%A" svg
         printfn "%A" ast // Just print AST
         0
