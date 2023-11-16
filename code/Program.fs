@@ -10,7 +10,7 @@ let main args =
     | Some ast ->
         let svg = eval ast
         //printfn "%A" svg
-        printfn "%A" ast // Just print AST
+        printfn "AST:\n %A" ast // Just print AST
         0
     | None ->
         printfn "Invalid program."

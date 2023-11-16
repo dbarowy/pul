@@ -5,11 +5,11 @@ open Combinator
 open System
 
 // Constructs an offer from:
-let offerConstructor((name,location,time,date,seats): string * string List * int List * Date * int): Event = 
+let offerConstructor((name,location,time,date,seats): string * string List * int List * Date List * int): Event = 
     Offer (name,location,time,date,seats)
 
 // Constructs a request from:
-let requestConstructor((name,location,time,date): string * string List * int List * Date): Event = 
+let requestConstructor((name,location,time,date): string * string List * int List * Date List): Event = 
     Request (name,location,time,date)
 
 // TODO: Do we actually need this function for pseq?
@@ -70,7 +70,7 @@ let offer =
             (passAlong)
         )
         (fun (name, (location, (time, (date, seats)))) ->
-            offerConstructor (name,[location],[time], date, seats)
+            offerConstructor (name,[location],[time], [date], seats)
         )
 
 // Request parser
@@ -87,7 +87,7 @@ let request =
             (passAlong)
         )
         (fun (name, (location, (time, date))) ->
-            requestConstructor (name,[location],[time], date)
+            requestConstructor (name,[location],[time], [date])
         )
 
 // An event is a request or offer

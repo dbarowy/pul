@@ -3,8 +3,8 @@ module AST
 type Date = { month: int; day: int }
 
 type Event =
-| Offer of string * string List * int List * Date * int
-| Request of string * string List * int List * Date
+| Offer of string * string List * int List * Date List * int
+| Request of string * string List * int List * Date List
 
 type InputSchedule = Event list
 
