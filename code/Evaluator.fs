@@ -3,6 +3,16 @@ module Evaluator
 open Graph
 open AST
 
+let timeMatchHelper(hr1: HourRange)(hr2: HourRange): bool =
+    match hr1.startHour,hr1.endHour, hr2.startHour,hr2.endHour with 
+    |a,-1,c,-1 -> a = c
+    |a,b,c,-1 -> (a<=c) && (c<=b) 
+    |a,-1,c,d -> (c<=a) && (a<=d)
+    |a,b,c,d  -> (a <= d) && (b >= c)
+
+let dateMatchHelper(date1: DateRange)(date2:DateRange): bool = 
+    match 
+
 // TODO: A function that takes takes an Offer and a Request and returns true of the Offer can fulfill the Request
 let fulfill (offer: Event) (request: Event): bool = 
     match offer,request with
@@ -10,7 +20,7 @@ let fulfill (offer: Event) (request: Event): bool =
     | Offer (_,loc1,time1,date1,_),Request (_,loc2,time2,date2) ->
         // Booleans for whether each field matches
         let locMatch = ((List.head loc1) = (List.head loc2))
-        let timeMatch = ((List.head time1) = (List.head time2))
+        let timeMatch = timeMatchHelper (time1) (time2)
         let dayMatch = ((List.head date1).day = (List.head date2).day)
         let monthMatch = ((List.head date1).month = (List.head date2).month)
 

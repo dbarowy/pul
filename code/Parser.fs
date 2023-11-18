@@ -5,11 +5,11 @@ open Combinator
 open System
 
 // Constructs an offer from:
-let offerConstructor((name,location,time,date,seats): string * string List * int List * Date List * int): Event = 
+let offerConstructor((name,location,time,date,seats): string * string List * HourRange * DateRange * int): Event = 
     Offer (name,location,time,date,seats)
 
 // Constructs a request from:
-let requestConstructor((name,location,time,date): string * string List * int List * Date List): Event = 
+let requestConstructor((name,location,time,date): string * string List * HourRange * DateRange): Event = 
     Request (name,location,time,date)
 
 // TODO: Do we actually need this function for pseq?
@@ -38,19 +38,42 @@ let number = pmany1 pdigit |>> (fun ds -> stringify ds |> int)
 // Replaces the generic use of number below
 // let hour = 
 
-// TODO: Add a time parser that accepts:
+
+
+// parses for single hour
+let hour = number |>> ( fun x -> {startHour = x; endHour = -1})
+
+// parses for hour-hour
+let hourToHour =
+    pseq 
+        (number)
+        (pright (pchar '-') (number))
+        (fun (h1,h2) -> ({startHour = h1; endHour = h2}))
+
+// A time parser that accepts:
 //      hour
 //      hour-hour
-// let time = 
+let hourRange =  hourToHour <|> hour 
 
-// Date parser
+// Date for one date
 let date =
     pseq
         (pleft (number) (pchar '/'))
         (number)
         (fun (m, d) ->
-            { month = m; day = d}
+            {month = m; day = d}
         )
+
+let singleDate =
+    date |>> (fun d -> {startDate = d; endDate = {month = -1; day = -1}})
+
+let dateToDate = 
+     pseq 
+        (date)
+        (pright (pchar '-') (date))
+        (fun (d1,d2) -> ({startDate = d1; endDate = d2}))
+
+let dateRange = dateToDate <|> singleDate  
 
 // Offer parser
 let offer = 
@@ -59,9 +82,9 @@ let offer =
         (pseq 
             (pad (pright (pstr "to ") (string)))
             (pseq
-                (pad (pright (pstr "at ") (number)))
+                (pad (pright (pstr "at ") (hourRange)))
                 (pseq
-                    (pad (pright (pstr "on ") (date)))
+                    (pad (pright (pstr "on ") (dateRange)))
                     (pad (pbetween (pstr "with ") (number) ((pstr " seats") <|> (pstr " seat"))))
                     (passAlong)
                 )
@@ -70,7 +93,7 @@ let offer =
             (passAlong)
         )
         (fun (name, (location, (time, (date, seats)))) ->
-            offerConstructor (name,[location],[time], [date], seats)
+            offerConstructor (name,[location],time, date, seats)
         )
 
 // Request parser
@@ -80,14 +103,14 @@ let request =
         (pseq 
             (pad (pright (pstr "to ") (string)))
             (pseq
-                (pad (pright (pstr "at ") (number)))
-                (pad (pright (pstr "on ") (date)))
+                (pad (pright (pstr "at ") (hourRange)))
+                (pad (pright (pstr "on ") (dateRange)))
                 (passAlong)
             )
             (passAlong)
         )
         (fun (name, (location, (time, date))) ->
-            requestConstructor (name,[location],[time], [date])
+            requestConstructor (name,[location],time, date)
         )
 
 // An event is a request or offer
