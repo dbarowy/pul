@@ -63,6 +63,42 @@ let rec addFullfillEdges (idRequest: int) (offerList: Vertex<Event,int*int> list
         if (fulfill (Graph.vertexData o) request) then (addFullfillEdges idRequest os ((Graph.addEdge 0 idOffer idRequest (0,1) g) |> snd)) else (addFullfillEdges idRequest os g)
 
 
+let rec addSourceToOfferEdges (idSource: int) (offerList: Vertex<Event,int*int> list) (g: Graph<Event,int*int>): Graph<Event,int*int> =
+    match offerList with
+    // Base case: No more offers to check
+    | [] -> g
+    // Inductive step: check if first offer in offerList fulfills id
+    | o::os ->
+        // Get the id of the offer we are comparing to
+        let idOffer: int = (Graph.vertexId o)
+        // Get the offer event data
+        let offer: Event = (Graph.vertexData (Graph.getVertex idOffer g))
+        // Get the seats field of this offer (should never hit the default case of this match)
+        let seats =
+            match offer with
+            | Offer (_,_,_,_,seatsNum) -> seatsNum
+            | _ -> -1
+        // Add a new edge between the source and this offer
+        addSourceToOfferEdges idSource os ((Graph.addEdge 0 idSource idOffer (0,seats) g) |> snd)
+
+let addRequestToSinkEdges (sinkId: int)  (g: Graph<Event,int*int>): Graph<Event,int*int> =
+    // Save the list of all verticies
+    let vertexList = g |> snd
+    let rec addOneEdge vertexList graph = 
+        match vertexList with
+        // Base case: no more vertices to add edges between 
+        | [] -> graph
+        // Inductive step:
+        | v::vs -> 
+            let vertexData = v |> fst
+            let vertexId = vertexData |> fst
+            let vertexEvent = vertexData |> snd
+            match vertexEvent with
+            | Offer (_,_,_,_,_) ->  addOneEdge vs graph // Do nothing
+            | Request (_,_,_,_) ->  addOneEdge vs ((Graph.addEdge 0 vertexId sinkId (0,1) graph) |> snd) // Add an edge
+    addOneEdge vertexList g
+
+
 // Recursively construct a graph with only offer nodes
 let rec constructOffersGraph (g: Graph<Event,int*int>) (input: InputSchedule): Graph<Event,int*int> =
     // Recursiely add elements of input to g
@@ -96,8 +132,9 @@ let eval (input: InputSchedule): Graph<Event,int*int> =
     // Construct new empty graph
     let graphEmpty = Graph.empty
 
-    // Add source node
-    let graphSource = (Graph.addVertex (Offer("Source",["Source"],{startHour = -1; endHour = -1},{startDate = {month = -1; day = -1}; endDate = {month = -1; day = -1}},-1)) graphEmpty) |> snd
+    // Create and add source node
+    let dummySourceOffer = Offer("SOURCE",["SOURCE"],{startHour = -1; endHour = -1},{startDate = {month = -1; day = -1}; endDate = {month = -1; day = -1}},-1)
+    let graphSource = (Graph.addVertex dummySourceOffer graphEmpty) |> snd
 
     // Add offer nodes to graph
     let offers = constructOffersGraph graphSource input
@@ -109,7 +146,19 @@ let eval (input: InputSchedule): Graph<Event,int*int> =
     let offersAndRequests = addRequests offers input offersList
     //printf "Parsed graph:\n %A\n\n\n" offersAndRequests
 
-    offersAndRequests
+    // Add edges between source to all offers with weight of the offer's seat capacity
+    let linkedSource = addSourceToOfferEdges 0 offersList offersAndRequests
+
+    // Create and add sink node
+    let dummySinkOffer = Offer("SINK",["SINK"],{startHour = -1; endHour = -1},{startDate = {month = -1; day = -1}; endDate = {month = -1; day = -1}},-1)
+    let graphSinkData = (Graph.addVertex dummySinkOffer linkedSource)
+    let sinkId = graphSinkData |> fst
+    let sinkGraph = graphSinkData |> snd
+
+    // Add edges between all requests and sink
+    let completeGraph = addRequestToSinkEdges sinkId sinkGraph
+
+    completeGraph
 
     // Run Ford-Fulkerson
 
