@@ -25,25 +25,30 @@ let expr, exprImpl = recparser()
 // String parser
 let string = pmany1 pletter |>> (fun ds -> stringify ds)
 
-// TODO: String list parser to get location list:
+// Parses a , then string with arbitrary spacing
+let stringComma = pleft (pad string) (pad (pchar (',')))
+
+// Locations parser that looks for at least one comma separated string
 // Can handle something like:
 //      Boston
 //      NYC, Chicago, Boston
-// let stringList = 
+// Returns an array of the locations
+let locations = pseq (pmany0 stringComma) (string) (fun (x,y) -> x@[y])
 
-// Number parser
+// Generic number parser that returns an int
 let number = pmany1 pdigit |>> (fun ds -> stringify ds |> int)
 
 // TODO: Add an hour parser that only accepts 0-23
 // Replaces the generic use of number below
-// let hour = 
+let validHour =
+    (pseq (psat (fun d -> (d |> int < 2))) (psat (fun d -> (d |> int < 9))) (fun (a,b) -> $"{a}{b}" |> int))
+    <|>
+    (pseq (psat (fun d -> (d |> int = 2))) (psat (fun d -> (d |> int < 4))) (fun (a,b) -> $"{a}{b}" |> int))
 
-
-
-// parses for single hour
+// Parses for single hour
 let hour = number |>> ( fun x -> {startHour = x; endHour = x})
 
-// parses for hour-hour
+// Parses for hour-hour
 let hourToHour =
     pseq 
         (number)
@@ -101,7 +106,7 @@ let request =
     pseq
         (pad (pright (pstr "Request: ") (string)))
         (pseq 
-            (pad (pright (pstr "to ") (string)))
+            (pad (pright (pstr "to ") (locations)))
             (pseq
                 (pad (pright (pstr "at ") (hourRange)))
                 (pad (pright (pstr "on ") (dateRange)))
@@ -110,7 +115,7 @@ let request =
             (passAlong)
         )
         (fun (name, (location, (time, date))) ->
-            requestConstructor (name,[location],time, date)
+            requestConstructor (name,location,time, date)
         )
 
 // An event is a request or offer

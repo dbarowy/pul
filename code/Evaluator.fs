@@ -5,6 +5,16 @@ open AST
 
 open System
 
+// Helper function which takes
+//      1) An offer's location
+//      2) A list of request locatons
+// And returns true if the offer location is in the list of request locations
+let rec locMatchHelper(offerLoc: String)(reqLocs: String List): bool =
+    match reqLocs with
+    | []    -> false
+    | x::xs  -> if x = offerLoc then true else locMatchHelper offerLoc xs
+
+
 // Helper function that takes
 //      1) Event A's hour range
 //      2) Event A's date range
@@ -25,7 +35,7 @@ let fulfill (offer: Event) (request: Event): bool =
     // Input was an Offer and Request
     | Offer (_,loc1,hours1,dates1,_),Request (_,loc2,hours2,dates2) ->
         // Booleans for whether each field matches
-        let locMatch = ((List.head loc1) = (List.head loc2))
+        let locMatch = locMatchHelper (List.head loc1) loc2
         let timeMatch = timeMatchHelper hours1 dates1 hours2 dates2
 
         // Offer fulfills request if ALL fields match
