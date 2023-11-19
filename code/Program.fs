@@ -6,7 +6,7 @@ open Parser
 let main args =
     // Verify user provided only one file path
     if Array.length args <> 1 then 
-        printfn "Usage: dotnet run <file with program>"
+        printfn "Usage: \n  dotnet run <path to file with program>"
         exit 1
 
     // Save provided file path
@@ -23,9 +23,10 @@ let main args =
     
     match parse text with
     | Some ast ->
-        printfn "AST:\n %A" ast // Print AST
+        printfn "\nAST:\n %A" ast // Print AST
+        printfn "\n --------------------------------------------------------------------- \n"
         let svg = eval ast
-        printfn "Evaluation:\n %A" svg // Print evaluation
+        printfn "EVALUATION:\n %A \n" svg // Print evaluation
         0
     | None ->
         printfn "Error while parsing. Invalid program."
