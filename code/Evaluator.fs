@@ -62,7 +62,8 @@ let rec addFullfillEdges (idRequest: int) (offerList: Vertex<Event,int*int> list
         // If offer fulfills request add an edge otherwise just return the original graph
         if (fulfill (Graph.vertexData o) request) then (addFullfillEdges idRequest os ((Graph.addEdge 0 idOffer idRequest (0,1) g) |> snd)) else (addFullfillEdges idRequest os g)
 
-
+// Recursive function that adds edges between the provided source ID and all offers contained in the offer list to graph g.
+// New edge contains the weight of the seat capacity of the offer.
 let rec addSourceToOfferEdges (idSource: int) (offerList: Vertex<Event,int*int> list) (g: Graph<Event,int*int>): Graph<Event,int*int> =
     match offerList with
     // Base case: No more offers to check
@@ -81,6 +82,7 @@ let rec addSourceToOfferEdges (idSource: int) (offerList: Vertex<Event,int*int> 
         // Add a new edge between the source and this offer
         addSourceToOfferEdges idSource os ((Graph.addEdge 0 idSource idOffer (0,seats) g) |> snd)
 
+// A function which adds an edge with capacity 1 between every request and the provided sink node
 let addRequestToSinkEdges (sinkId: int)  (g: Graph<Event,int*int>): Graph<Event,int*int> =
     // Save the list of all verticies
     let vertexList = g |> snd
@@ -90,9 +92,11 @@ let addRequestToSinkEdges (sinkId: int)  (g: Graph<Event,int*int>): Graph<Event,
         | [] -> graph
         // Inductive step:
         | v::vs -> 
+            // Save vertex v's data and Event
             let vertexData = v |> fst
             let vertexId = vertexData |> fst
             let vertexEvent = vertexData |> snd
+            // Check if vertext v is an Offer or Request
             match vertexEvent with
             | Offer (_,_,_,_,_) ->  addOneEdge vs graph // Do nothing
             | Request (_,_,_,_) ->  addOneEdge vs ((Graph.addEdge 0 vertexId sinkId (0,1) graph) |> snd) // Add an edge
