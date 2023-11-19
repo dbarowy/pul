@@ -94,12 +94,15 @@ let rec addRequests (g: Graph<Event,int*int>) (input: InputSchedule) (offerList:
 let eval (input: InputSchedule): Graph<Event,int*int> =
     //printfn "Entered Eval"
     // Construct new empty graph
-    let g = Graph.empty
+    let graphEmpty = Graph.empty
+
+    // Add source node
+    let graphSource = (Graph.addVertex (Offer("Source",["Source"],{startHour = -1; endHour = -1},{startDate = {month = -1; day = -1}; endDate = {month = -1; day = -1}},-1)) graphEmpty) |> snd
 
     // Add offer nodes to graph
-    let offers = constructOffersGraph g input
+    let offers = constructOffersGraph graphSource input
     //printf "Parsed graph: %A\n\n\n" offers
-    let offersList: Vertex<Event,int*int> list = snd offers // Save list of offer nodes only so we can refer to it
+    let offersList: Vertex<Event,int*int> list = (snd offers)[0..((snd offers).Length-2)] // Save list of offer nodes only so we can refer to it
     //printf "Offers:\n %A\n\n\n" offersList
 
     // Add request nodes and appropriate edges to graph
