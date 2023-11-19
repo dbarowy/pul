@@ -3,29 +3,33 @@ module Evaluator
 open Graph
 open AST
 
-let timeMatchHelper(hr1: HourRange)(hr2: HourRange): bool =
-    match hr1.startHour,hr1.endHour, hr2.startHour,hr2.endHour with 
-    |a,-1,c,-1 -> a = c
-    |a,b,c,-1 -> (a<=c) && (c<=b) 
-    |a,-1,c,d -> (c<=a) && (a<=d)
-    |a,b,c,d  -> (a <= d) && (b >= c)
+open System
 
-let dateMatchHelper(date1: DateRange)(date2:DateRange): bool = 
-    match 
+// Helper function that takes
+//      1) Event A's hour range
+//      2) Event A's date range
+//      3) Event B's hour range
+//      4) Event B's date range
+// And returns true if they overlap and false if they do not. Takes advantage of F# DateTime type to calculate differences
+// between times.
+let timeMatchHelper(h1: HourRange)(d1: DateRange)(h2: HourRange)(d2: DateRange): bool =
+    let time1start = DateTime(2023, d1.startDate.month, d1.startDate.day, h1.startHour, 0, 0)
+    let time1end = DateTime(2023, d1.endDate.month, d1.endDate.day, h1.endHour, 0, 0)
+    let time2start = DateTime(2023, d2.startDate.month, d2.startDate.day, h2.startHour, 0, 0)
+    let time2end = DateTime(2023, d2.endDate.month, d2.endDate.day, h2.endHour, 0, 0)
+    (time1start <= time2end) && (time1end >= time2start)
 
-// TODO: A function that takes takes an Offer and a Request and returns true of the Offer can fulfill the Request
+// A function that takes takes an Offer and a Request and returns true of the Offer can fulfill the Request
 let fulfill (offer: Event) (request: Event): bool = 
     match offer,request with
     // Input was an Offer and Request
-    | Offer (_,loc1,time1,date1,_),Request (_,loc2,time2,date2) ->
+    | Offer (_,loc1,hours1,dates1,_),Request (_,loc2,hours2,dates2) ->
         // Booleans for whether each field matches
         let locMatch = ((List.head loc1) = (List.head loc2))
-        let timeMatch = timeMatchHelper (time1) (time2)
-        let dayMatch = ((List.head date1).day = (List.head date2).day)
-        let monthMatch = ((List.head date1).month = (List.head date2).month)
+        let timeMatch = timeMatchHelper hours1 dates1 hours2 dates2
 
         // Offer fulfills request if ALL fields match
-        locMatch && timeMatch && dayMatch && monthMatch
+        locMatch && timeMatch
     // Input was not an Offer and Request
     | _ -> false
 
@@ -46,7 +50,7 @@ let rec addFullfillEdges (idRequest: int) (offerList: Vertex<Event,int*int> list
         // Get the id of the offer we are comparing to
         let idOffer: int = (Graph.vertexId o)
         // If offer fulfills request add an edge otherwise just return the original graph
-        if (fulfill (Graph.vertexData o) request) then ((Graph.addEdge 0 idOffer idRequest (0,1) g) |> snd) else g
+        if (fulfill (Graph.vertexData o) request) then (addFullfillEdges idRequest os ((Graph.addEdge 0 idOffer idRequest (0,1) g) |> snd)) else (addFullfillEdges idRequest os g)
 
 
 // Recursively construct a graph with only offer nodes
@@ -78,6 +82,7 @@ let rec addRequests (g: Graph<Event,int*int>) (input: InputSchedule) (offerList:
             addRequests (revisedGraph) (xs) (offerList)
 
 let eval (input: InputSchedule): Graph<Event,int*int> =
+    //printfn "Entered Eval"
     // Construct new empty graph
     let g = Graph.empty
 
@@ -85,27 +90,14 @@ let eval (input: InputSchedule): Graph<Event,int*int> =
     let offers = constructOffersGraph g input
     //printf "Parsed graph: %A\n\n\n" offers
     let offersList: Vertex<Event,int*int> list = snd offers // Save list of offer nodes only so we can refer to it
-    printf "Offers:\n %A\n\n\n" offersList
+    //printf "Offers:\n %A\n\n\n" offersList
 
     // Add request nodes and appropriate edges to graph
     let offersAndRequests = addRequests offers input offersList
-    printf "Parsed graph:\n %A\n\n\n" offersAndRequests
+    //printf "Parsed graph:\n %A\n\n\n" offersAndRequests
 
     offersAndRequests
 
     // Run Ford-Fulkerson
 
     // Return pretty print solution
-
-
-
-// GRAPH USAGE EXAMPLE
-
-Graph.empty
-  |> Graph.addVertex "Abe" // Returns identifier of vertex 1 and graph
-  |> (fun (v1,g) -> 
-    (Graph.addVertex "Bob" g) // Returns identifier of vertex 2 and graph
-    |> (fun (v2,g) -> 
-      (Graph.addEdge 0 v1 v2 100 g))) // Add edge with priority between v1 and v2 and label to graph g
-  |> snd
-  |> printf "Parsed graph: %A\n\n"

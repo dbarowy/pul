@@ -41,7 +41,7 @@ let number = pmany1 pdigit |>> (fun ds -> stringify ds |> int)
 
 
 // parses for single hour
-let hour = number |>> ( fun x -> {startHour = x; endHour = -1})
+let hour = number |>> ( fun x -> {startHour = x; endHour = x})
 
 // parses for hour-hour
 let hourToHour =
@@ -65,7 +65,7 @@ let date =
         )
 
 let singleDate =
-    date |>> (fun d -> {startDate = d; endDate = {month = -1; day = -1}})
+    date |>> (fun d -> {startDate = d; endDate = d})
 
 let dateToDate = 
      pseq 
