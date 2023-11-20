@@ -60,6 +60,7 @@ let hourToHour =
 //      hour-hour
 let hourRange =  hourToHour <|> hour 
 
+// TODO: Add a date parser that only accepts 1/1 -> 12/31
 // Date for one date
 let date =
     pseq
