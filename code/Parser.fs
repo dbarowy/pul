@@ -92,11 +92,11 @@ let offer =
                 (pseq
                     (pad (pright (pstr "on ") (dateRange)))
                     (pad (pbetween (pstr "with ") (number) ((pstr " seats") <|> (pstr " seat"))))
-                    (passAlong)
+                    id
                 )
-                (passAlong)
+                id
             )
-            (passAlong)
+            id
         )
         (fun (name, (location, (time, (date, seats)))) ->
             offerConstructor (name,[location],time, date, seats)
