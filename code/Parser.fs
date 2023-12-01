@@ -12,10 +12,6 @@ let offerConstructor((name,location,time,date,seats): string * string List * Hou
 let requestConstructor((name,location,time,date): string * string List * HourRange * DateRange): Event = 
     Request (name,location,time,date)
 
-// TODO: Do we actually need this function for pseq?
-// Pass along function
-let passAlong a = a
-
 // Padding parser
 let pad p = pbetween pws0 p pws0
 
@@ -111,9 +107,9 @@ let request =
             (pseq
                 (pad (pright (pstr "at ") (hourRange)))
                 (pad (pright (pstr "on ") (dateRange)))
-                (passAlong)
+                id
             )
-            (passAlong)
+            id
         )
         (fun (name, (location, (time, date))) ->
             requestConstructor (name,location,time, date)
