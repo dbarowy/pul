@@ -10,6 +10,7 @@
     <Compile Include="Graph.fs" />
     <Compile Include="Combinator.fs" />
     <Compile Include="AST.fs" />
+    <Compile Include="GraphCreationFunctions.fs" />
     <Compile Include="Evaluator.fs" />
     <Compile Include="Parser.fs" />
     <Compile Include="Program.fs" />
