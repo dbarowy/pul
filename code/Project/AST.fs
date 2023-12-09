@@ -1,13 +1,11 @@
 module AST
 
-type Date = { month: int; day: int }
+open System
 
-type HourRange = {startHour: int; endHour: int}
-
-type DateRange = {startDate: Date; endDate: Date}
+type TimeRange = {startTime: DateTime; endTime: DateTime}
 
 type Event =
-| Offer of string * string List * HourRange * DateRange* int
-| Request of string * string List * HourRange * DateRange
+| Offer of string * string List * TimeRange * int
+| Request of string * string List * TimeRange
 
 type InputSchedule = Event list

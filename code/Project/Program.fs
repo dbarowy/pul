@@ -3,17 +3,17 @@ open System
 open Parser
 
 [<EntryPoint>]
-let main args =
+let main (args: string array) =
     // Verify user provided only one file path
     if Array.length args <> 1 then 
         printfn "Usage: \n  dotnet run <path to file with program>"
         exit 1
 
     // Save provided file path
-    let file = args[0]
+    let file: string = args[0]
 
     // Try to open file
-    let text =
+    let text: string =
         try
             IO.File.ReadAllText file
         with
@@ -22,7 +22,7 @@ let main args =
                     exit 1
     
     match parse text with
-    | Some ast ->
+    | Some (ast: AST.InputSchedule) ->
         printfn "\nAST:\n %A" ast // Print AST
         printfn "\n --------------------------------------------------------------------- \n"
         let svg = eval ast

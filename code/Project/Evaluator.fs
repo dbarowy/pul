@@ -22,21 +22,21 @@ let rec locMatchHelper(offerLoc: String)(reqLocs: String List): bool =
 //      4) Event B's date range
 // And returns true if they overlap and false if they do not. Takes advantage of F# DateTime type to calculate differences
 // between times.
-let timeMatchHelper(h1: HourRange)(d1: DateRange)(h2: HourRange)(d2: DateRange): bool =
-    let time1start = DateTime(2023, d1.startDate.month, d1.startDate.day, h1.startHour, 0, 0)
-    let time1end = DateTime(2023, d1.endDate.month, d1.endDate.day, h1.endHour, 0, 0)
-    let time2start = DateTime(2023, d2.startDate.month, d2.startDate.day, h2.startHour, 0, 0)
-    let time2end = DateTime(2023, d2.endDate.month, d2.endDate.day, h2.endHour, 0, 0)
+let timeMatchHelper(timeRange1)(timeRange2): bool =
+    let time1start = timeRange1.startTime
+    let time1end = timeRange1.endTime
+    let time2start = timeRange2.startTime
+    let time2end = timeRange2.endTime
     (time1start <= time2end) && (time1end >= time2start)
 
 // A function that takes takes an Offer and a Request and returns true of the Offer can fulfill the Request
 let fulfill (offer: Event) (request: Event): bool = 
     match offer,request with
     // Input was an Offer and Request
-    | Offer (_,loc1,hours1,dates1,_),Request (_,loc2,hours2,dates2) ->
+    | Offer (_,loc1: List<string>,timeRange1: TimeRange,_),Request (_,loc2: List<string>,timeRange2: TimeRange) ->
         // Booleans for whether each field matches
         let locMatch = locMatchHelper (List.head loc1) loc2
-        let timeMatch = timeMatchHelper hours1 dates1 hours2 dates2
+        let timeMatch = timeMatchHelper timeRange1 timeRange2
 
         // Offer fulfills request if ALL fields match
         locMatch && timeMatch
@@ -77,7 +77,7 @@ let rec addSourceToOfferEdges (idSource: int) (offerList: Vertex<Event,int*int> 
         // Get the seats field of this offer (should never hit the default case of this match)
         let seats =
             match offer with
-            | Offer (_,_,_,_,seatsNum) -> seatsNum
+            | Offer (_,_,_,seatsNum) -> seatsNum
             | _ -> -1
         // Add a new edge between the source and this offer
         addSourceToOfferEdges idSource os ((Graph.addEdge 0 idSource idOffer (0,seats) g) |> snd)
@@ -98,8 +98,8 @@ let addRequestToSinkEdges (sinkId: int)  (g: Graph<Event,int*int>): Graph<Event,
             let vertexEvent = vertexData |> snd
             // Check if vertext v is an Offer or Request
             match vertexEvent with
-            | Offer (_,_,_,_,_) ->  addOneEdge vs graph // Do nothing
-            | Request (_,_,_,_) ->  addOneEdge vs ((Graph.addEdge 0 vertexId sinkId (0,1) graph) |> snd) // Add an edge
+            | Offer (_,_,_,_) ->  addOneEdge vs graph // Do nothing
+            | Request (_,_,_) ->  addOneEdge vs ((Graph.addEdge 0 vertexId sinkId (0,1) graph) |> snd) // Add an edge
     addOneEdge vertexList g
 
 
@@ -110,8 +110,8 @@ let rec constructOffersGraph (g: Graph<Event,int*int>) (input: InputSchedule): G
     | []        -> g
     | x::xs     ->
         match x with
-        | Offer (_,_,_,_,_)-> constructOffersGraph (Graph.addVertex x g |> snd) (xs)
-        | Request (_,_,_,_)-> constructOffersGraph (g) (xs)
+        | Offer (_,_,_,_)-> constructOffersGraph (Graph.addVertex x g |> snd) (xs)
+        | Request (_,_,_)-> constructOffersGraph (g) (xs)
 
 // Recursively add request nodes and their edges to graph
 let rec addRequests (g: Graph<Event,int*int>) (input: InputSchedule) (offerList: Vertex<Event,int*int> list): Graph<Event,int*int> =
@@ -120,8 +120,8 @@ let rec addRequests (g: Graph<Event,int*int>) (input: InputSchedule) (offerList:
     | []        -> g
     | x::xs     ->
         match x with
-        | Offer (_,_,_,_,_)-> addRequests (g) (xs) (offerList)
-        | Request (_,_,_,_)-> 
+        | Offer (_,_,_,_)-> addRequests (g) (xs) (offerList)
+        | Request (_,_,_)-> 
             // Add request node
             let newGraph: (int * Graph<Event,int*int>) = Graph.addVertex x g
 
@@ -134,14 +134,14 @@ let rec addRequests (g: Graph<Event,int*int>) (input: InputSchedule) (offerList:
 let eval (input: InputSchedule): Graph<Event,int*int> =
     //printfn "Entered Eval"
     // Construct new empty graph
-    let graphEmpty = Graph.empty
+    let graphEmpty: Graph<'a,'b> = Graph.empty
 
     // Create and add source node
-    let dummySourceOffer = Offer("SOURCE",["SOURCE"],{startHour = -1; endHour = -1},{startDate = {month = -1; day = -1}; endDate = {month = -1; day = -1}},-1)
-    let graphSource = (Graph.addVertex dummySourceOffer graphEmpty) |> snd
+    let dummySourceOffer: Event = Offer("SOURCE",["SOURCE"],{startTime = DateTime(0); endTime = DateTime(0)},-1)
+    let graphSource: Graph<Event,(int * int)> = (Graph.addVertex dummySourceOffer graphEmpty) |> snd
 
     // Add offer nodes to graph
-    let offers = constructOffersGraph graphSource input
+    let offers: Graph<Event,(int * int)> = constructOffersGraph graphSource input
     //printf "Parsed graph: %A\n\n\n" offers
     let offersList: Vertex<Event,int*int> list = (snd offers)[0..((snd offers).Length-2)] // Save list of offer nodes only so we can refer to it
     //printf "Offers:\n %A\n\n\n" offersList
@@ -154,7 +154,7 @@ let eval (input: InputSchedule): Graph<Event,int*int> =
     let linkedSource = addSourceToOfferEdges 0 offersList offersAndRequests
 
     // Create and add sink node
-    let dummySinkOffer = Offer("SINK",["SINK"],{startHour = -1; endHour = -1},{startDate = {month = -1; day = -1}; endDate = {month = -1; day = -1}},-1)
+    let dummySinkOffer = Offer("SINK",["SINK"],{startTime = DateTime(0); endTime = DateTime(0)},-1)
     let graphSinkData = (Graph.addVertex dummySinkOffer linkedSource)
     let sinkId = graphSinkData |> fst
     let sinkGraph = graphSinkData |> snd

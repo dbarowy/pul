@@ -5,12 +5,12 @@ open Combinator
 open System
 
 // Constructs an offer from:
-let offerConstructor((name,location,time,date,seats): string * string List * HourRange * DateRange * int): Event = 
-    Offer (name,location,time,date,seats)
+let offerConstructor(name: string,locationList: List<string>,timeRange: TimeRange,seats: int): Event = 
+    Offer (name,locationList,timeRange,seats)
 
 // Constructs a request from:
-let requestConstructor((name,location,time,date): string * string List * HourRange * DateRange): Event = 
-    Request (name,location,time,date)
+let requestConstructor(name: string,locationList: List<string>,timeRange: TimeRange): Event = 
+    Request (name,locationList,timeRange)
 
 // Padding parser
 let pad p = pbetween pws0 p pws0
@@ -19,7 +19,7 @@ let pad p = pbetween pws0 p pws0
 let expr, exprImpl = recparser()
 
 // String parser
-let string = pmany1 pletter |>> (fun ds -> stringify ds)
+let string = pmany1 pletter |>> (fun (ds: char list) -> stringify ds)
 
 // Parses a , then string with arbitrary spacing
 let stringComma = pleft (pad string) (pad (pchar (',')))
@@ -29,53 +29,49 @@ let stringComma = pleft (pad string) (pad (pchar (',')))
 //      Boston
 //      NYC, Chicago, Boston
 // Returns an array of the locations
-let locations = pseq (pmany0 stringComma) (string) (fun (x,y) -> x@[y])
+let locations = pseq (pmany0 stringComma) (string) (fun (x: string list,y: string) -> x@[y])
 
 // Generic number parser that returns an int
-let number = pmany1 pdigit |>> (fun ds -> stringify ds |> int)
+let number = pmany1 pdigit |>> (fun (ds: char list) -> stringify ds |> int)
 
-// TODO: Add an hour parser that only accepts 0-23
-// Replaces the generic use of number below
-let validHour =
-    (pseq (psat (fun d -> (d |> int < 2))) (psat (fun d -> (d |> int < 9))) (fun (a,b) -> $"{a}{b}" |> int))
-    <|>
-    (pseq (psat (fun d -> (d |> int = 2))) (psat (fun d -> (d |> int < 4))) (fun (a,b) -> $"{a}{b}" |> int))
-
-// Parses for single hour
-let hour = number |>> ( fun x -> {startHour = x; endHour = x})
-
-// Parses for hour-hour
-let hourToHour =
-    pseq 
-        (number)
-        (pright (pchar '-') (number))
-        (fun (h1,h2) -> ({startHour = h1; endHour = h2}))
-
-// A time parser that accepts:
-//      hour
-//      hour-hour
-let hourRange =  hourToHour <|> hour 
-
-// TODO: Add a date parser that only accepts 1/1 -> 12/31
-// Date for one date
-let date =
+// Parses a date of the format:
+//      HH PM MM/DD/YYYY
+let timeFormat1 = 
     pseq
-        (pleft (number) (pchar '/'))
-        (number)
-        (fun (m, d) ->
-            {month = m; day = d}
+        (pad (number))
+        (pseq
+            (pleft (pad ((pstr "AM") <|> (pstr "PM"))) (pad (pstr "on")))
+            (pad (pseq
+                    (number)
+                    (pseq
+                        (pright (pchar '/') (number))
+                        (pright (pchar '/') (number))
+                        (id)
+                    )
+                    (id)
+            ))
+            (id)
+        )
+        // turn the parsed input into an F# DateTime
+        (fun (hourNum: int, (hourStr: string, (month: int, (day: int, year: int)))) ->
+            let strRepresentation: string = $"{hourNum} {hourStr} {month}/{day}/{year}"
+            //TODO: Make use of the boolean here if this isn't a good date?????
+            DateTime.TryParse(strRepresentation) |> snd
         )
 
-let singleDate =
-    date |>> (fun d -> {startDate = d; endDate = d})
+// Parses just one time, i.e. "at 2am on 5/22/2023"
+let oneTime = 
+    pad (pright (pstr "at ") (timeFormat1))|>> (fun (time1: DateTime) -> {startTime = time1; endTime = time1})
+    
+// Parses two times, i.e. "at 2am on 5/22/2023 to 10am on 5/23/2023"
+let twoTimes = 
+    pseq 
+        (pad (pright (pstr "at ") (timeFormat1)))
+        (pad (pright (pstr "to ") (timeFormat1)))
+        (fun (time1: DateTime, time2: DateTime) -> {startTime = time1; endTime = time2})
 
-let dateToDate = 
-     pseq 
-        (date)
-        (pright (pchar '-') (date))
-        (fun (d1,d2) -> ({startDate = d1; endDate = d2}))
-
-let dateRange = dateToDate <|> singleDate  
+// Parser looking for two times first otherwise one time
+let timeParser = twoTimes <|> oneTime
 
 // Offer parser
 let offer = 
@@ -84,18 +80,14 @@ let offer =
         (pseq 
             (pad (pright (pstr "to ") (string)))
             (pseq
-                (pad (pright (pstr "at ") (hourRange)))
-                (pseq
-                    (pad (pright (pstr "on ") (dateRange)))
-                    (pad (pbetween (pstr "with ") (number) ((pstr " seats") <|> (pstr " seat"))))
-                    id
-                )
+                (pad (timeParser))
+                (pad (pbetween (pstr "with ") (number) ((pstr " seats") <|> (pstr " seat"))))
                 id
             )
             id
         )
-        (fun (name, (location, (time, (date, seats)))) ->
-            offerConstructor (name,[location],time, date, seats)
+        (fun (name: string, (location: string, (timeRange, seats: int))) ->
+            offerConstructor (name,[location],timeRange, seats)
         )
 
 // Request parser
@@ -104,15 +96,11 @@ let request =
         (pad (pright (pstr "Request: ") (string)))
         (pseq 
             (pad (pright (pstr "to ") (locations)))
-            (pseq
-                (pad (pright (pstr "at ") (hourRange)))
-                (pad (pright (pstr "on ") (dateRange)))
-                id
-            )
+            (pad (timeParser))
             id
         )
-        (fun (name, (location, (time, date))) ->
-            requestConstructor (name,location,time, date)
+        (fun (name: string, (location: string list, timeRange: TimeRange)) ->
+            requestConstructor (name,location,timeRange)
         )
 
 // An event is a request or offer
@@ -125,7 +113,7 @@ exprImpl :=
 let grammar = pleft expr peof
 
 let parse (input: string) : InputSchedule option =
-    let i = prepare input
+    let i: Input = prepare input
     match grammar i with
-    | Success(ast, _) -> Some ast
+    | Success(ast: Event list, _) -> Some ast
     | Failure(_,_) -> None
