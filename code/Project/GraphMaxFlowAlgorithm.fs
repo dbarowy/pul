@@ -5,7 +5,7 @@ open AST
 
 open System
 
-let BFS (g: Graph<'a,'b>)(souceID: int) (sinkID: int) (parent: int array): bool =
+let BFS (g: int * Vertex<'a,int> list)(souceID: int) (sinkID: int) (parent: int array): bool =
     let vertexCount: int = (g |> snd) |> List.length
     //printfn "%A" vertexCount
 
@@ -23,8 +23,8 @@ let BFS (g: Graph<'a,'b>)(souceID: int) (sinkID: int) (parent: int array): bool 
         let popID: int = List.head queue
         queue <- (List.tail queue)
 
-        let popVertex: Vertex<'a,'b> = getVertex popID g
-        let popVertexAdjacencyList: EdgeData<'E> list = popVertex |> snd
+        let popVertex: Vertex<'a,int>= getVertex popID g
+        let popVertexAdjacencyList: Adjacency<int>= popVertex |> snd
         let popAdjacentVerticiesIDs: (int * int) list = List.map (fun (_,_,v,cap) -> (v,cap)) popVertexAdjacencyList
         //printfn "%A" popAdjacentVerticiesIDs
 
