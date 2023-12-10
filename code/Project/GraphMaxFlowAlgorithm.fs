@@ -7,14 +7,14 @@ open System
 
 let BFS (g: Graph<'a,'b>)(souceID: int) (sinkID: int) (parent: int array): bool =
     let vertexCount: int = (g |> snd) |> List.length
-    printfn "%A" vertexCount
+    //printfn "%A" vertexCount
 
-    let mutable visited: bool array = Array.init  100 (fun i -> if i = 0 then true else false)
-    printfn "%A" visited
+    let mutable visited: bool array = Array.init  (g |> fst) (fun i -> if i = 0 then true else false)
+    //printfn "%A" visited
 
     let mutable queue: int list = [0]
 
-    let mutable result = false
+    let mutable result: bool = false
 
     while (List.length queue > 0 && (not result)) do 
         //printfn "Queue: %A" queue
@@ -25,7 +25,7 @@ let BFS (g: Graph<'a,'b>)(souceID: int) (sinkID: int) (parent: int array): bool 
 
         let popVertex: Vertex<'a,'b> = getVertex popID g
         let popVertexAdjacencyList: EdgeData<'E> list = popVertex |> snd
-        let popAdjacentVerticiesIDs: (int * int) list = List.map (fun (_,_,v,(flow, cap)) -> (v,cap-flow)) popVertexAdjacencyList
+        let popAdjacentVerticiesIDs: (int * int) list = List.map (fun (_,_,v,cap) -> (v,cap)) popVertexAdjacencyList
         //printfn "%A" popAdjacentVerticiesIDs
 
         let rec work (vertexList: (int * int) list): bool =  
@@ -55,5 +55,31 @@ let BFS (g: Graph<'a,'b>)(souceID: int) (sinkID: int) (parent: int array): bool 
 
         result <- work popAdjacentVerticiesIDs 
     
-    printfn "PARENT: %A" parent
+    //printfn "PARENT: %A" parent
     result
+
+(*let fordFulkerson (g: Graph<'a,'b>)(sourceID: int) (sinkID: int) =
+    let mutable mutableG: Graph<'a,(int * int)> = g
+
+    let parent: int array = Array.init (g |> fst) (fun i -> -1)
+
+    let mutable max_flow: int = 0
+
+    let mutable pathExists = BFS mutableG sourceID sinkID parent
+
+    while pathExists do
+        let mutable path_flow: int = 2147483647
+        let mutable s: int = sinkID
+        while (s <> sourceID) do
+            let parentID: int = parent.[s]
+            let parentEdges: Adjacency<int * int> = getEdges parentID mutableG
+            let parentToSFlow: int = List.fold (fun acc (_,_,id,(flow, cap)) -> if id = s then acc+cap-flow else acc ) 0 parentEdges
+            path_flow <- (min path_flow parentToSFlow)
+            s <- parentID
+        
+        max_flow <- max_flow + path_flow
+
+
+    0*)
+
+

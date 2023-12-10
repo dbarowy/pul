@@ -49,7 +49,7 @@ let fulfill (offer: Event) (request: Event): bool =
 //  3) a graph
 // And adds edges between the vertex with the provided ID and any offers in the list/graph that fulfill the request
 // Returns the new graph
-let rec addFullfillEdges (idRequest: int) (offerList: Vertex<Event,int*int> list) (g: Graph<Event,int*int>): Graph<Event,int*int> =
+let rec addFullfillEdges (idRequest: int) (offerList: Vertex<Event, int> list) (g: Graph<Event,int>): Graph<Event,int> =
     match offerList with
     // Base case: No more offers to check
     | [] -> g
@@ -60,11 +60,15 @@ let rec addFullfillEdges (idRequest: int) (offerList: Vertex<Event,int*int> list
         // Get the id of the offer we are comparing to
         let idOffer: int = (Graph.vertexId o)
         // If offer fulfills request add an edge otherwise just return the original graph
-        if (fulfill (Graph.vertexData o) request) then (addFullfillEdges idRequest os ((Graph.addEdge 0 idOffer idRequest (0,1) g) |> snd)) else (addFullfillEdges idRequest os g)
+        if (fulfill (Graph.vertexData o) request) then 
+            let newGraph: Graph<Event,int> = (Graph.addEdge 0 idOffer idRequest 1 g) |> snd
+            let newGraph2: Graph<Event,int> = (Graph.addEdge 0 idRequest idOffer 0 newGraph) |> snd
+            (addFullfillEdges idRequest os newGraph2) 
+        else (addFullfillEdges idRequest os g)
 
 // Recursive function that adds edges between the provided source ID and all offers contained in the offer list to graph g.
 // New edge contains the weight of the seat capacity of the offer.
-let rec addSourceToOfferEdges (idSource: int) (offerList: Vertex<Event,int*int> list) (g: Graph<Event,int*int>): Graph<Event,int*int> =
+let rec addSourceToOfferEdges (idSource: int) (offerList: Vertex<Event, int> list) (g: Graph<Event,int>): Graph<Event,int> =
     match offerList with
     // Base case: No more offers to check
     | [] -> g
@@ -80,10 +84,12 @@ let rec addSourceToOfferEdges (idSource: int) (offerList: Vertex<Event,int*int> 
             | Offer (_,_,_,seatsNum) -> seatsNum
             | _ -> -1
         // Add a new edge between the source and this offer
-        addSourceToOfferEdges idSource os ((Graph.addEdge 0 idSource idOffer (0,seats) g) |> snd)
+        let newGraph1: Graph<Event,int> = (Graph.addEdge 0 idSource idOffer seats g) |> snd
+        let newGraph2: Graph<Event,int> = (Graph.addEdge 0 idOffer idSource 0 newGraph1) |> snd
+        addSourceToOfferEdges idSource os newGraph2
 
 // A function which adds an edge with capacity 1 between every request and the provided sink node
-let addRequestToSinkEdges (sinkId: int)  (g: Graph<Event,int*int>): Graph<Event,int*int> =
+let addRequestToSinkEdges (sinkId: int)  (g: Graph<Event,int>): Graph<Event,int> =
     // Save the list of all verticies
     let vertexList = g |> snd
     let rec addOneEdge vertexList graph = 
@@ -99,12 +105,16 @@ let addRequestToSinkEdges (sinkId: int)  (g: Graph<Event,int*int>): Graph<Event,
             // Check if vertext v is an Offer or Request
             match vertexEvent with
             | Offer (_,_,_,_) ->  addOneEdge vs graph // Do nothing
-            | Request (_,_,_) ->  addOneEdge vs ((Graph.addEdge 0 vertexId sinkId (0,1) graph) |> snd) // Add an edge
+            | Request (_,_,_) ->  
+                // Add an edge
+                let newGraph1: Graph<'b,int> = (Graph.addEdge 0 vertexId sinkId 1 graph) |> snd
+                let newGraph2: Graph<'b,int> = (Graph.addEdge 0 sinkId vertexId 0 newGraph1) |> snd
+                addOneEdge vs newGraph2 
     addOneEdge vertexList g
 
 
 // Recursively construct a graph with only offer nodes
-let rec constructOffersGraph (g: Graph<Event,int*int>) (input: InputSchedule): Graph<Event,int*int> =
+let rec constructOffersGraph (g: Graph<Event,int>) (input: InputSchedule): Graph<Event,int> =
     // Recursiely add elements of input to g
     match input with
     | []        -> g
@@ -114,7 +124,7 @@ let rec constructOffersGraph (g: Graph<Event,int*int>) (input: InputSchedule): G
         | Request (_,_,_)-> constructOffersGraph (g) (xs)
 
 // Recursively add request nodes and their edges to graph
-let rec addRequests (g: Graph<Event,int*int>) (input: InputSchedule) (offerList: Vertex<Event,int*int> list): Graph<Event,int*int> =
+let rec addRequests (g: Graph<Event,int>) (input: InputSchedule) (offerList: Vertex<Event, int> list): Graph<Event,int> =
     // Recursiely add elements of input to g
     match input with
     | []        -> g
@@ -123,27 +133,27 @@ let rec addRequests (g: Graph<Event,int*int>) (input: InputSchedule) (offerList:
         | Offer (_,_,_,_)-> addRequests (g) (xs) (offerList)
         | Request (_,_,_)-> 
             // Add request node
-            let newGraph: (int * Graph<Event,int*int>) = Graph.addVertex x g
+            let newGraph: (int * Graph<Event,int>) = Graph.addVertex x g
 
             // Add edge if offer matches request
-            let revisedGraph = addFullfillEdges (newGraph |> fst) offerList (newGraph |> snd)
+            let revisedGraph: Graph<Event,int> = addFullfillEdges (newGraph |> fst) offerList (newGraph |> snd)
 
             // Recursive call
             addRequests (revisedGraph) (xs) (offerList)
 
-let createGraph (input: InputSchedule): Graph<Event,int*int> =
+let createGraph (input: InputSchedule): Graph<Event,int> =
     //printfn "Entered Eval"
     // Construct new empty graph
     let graphEmpty: Graph<'a,'b> = Graph.empty
 
     // Create and add source node
     let dummySourceOffer: Event = Offer("SOURCE",["SOURCE"],{startTime = DateTime(0); endTime = DateTime(0)},-1)
-    let graphSource: Graph<Event,(int * int)> = (Graph.addVertex dummySourceOffer graphEmpty) |> snd
+    let graphSource: Graph<Event,int> = (Graph.addVertex dummySourceOffer graphEmpty) |> snd
 
     // Add offer nodes to graph
-    let offers: Graph<Event,(int * int)> = constructOffersGraph graphSource input
+    let offers: Graph<Event,int> = constructOffersGraph graphSource input
     //printf "Parsed graph: %A\n\n\n" offers
-    let offersList: Vertex<Event,int*int> list = (snd offers)[0..((snd offers).Length-2)] // Save list of offer nodes only so we can refer to it
+    let offersList: Vertex<Event,int> list = (snd offers)[0..((snd offers).Length-2)] // Save list of offer nodes only so we can refer to it
     //printf "Offers:\n %A\n\n\n" offersList
 
     // Add request nodes and appropriate edges to graph
