@@ -28,6 +28,7 @@ class Graph:
 
 		# Standard BFS Loop
 		while queue:
+			print(queue)
 
 			# Dequeue a vertex from queue and print it
 			u = queue.pop(0)
@@ -36,8 +37,8 @@ class Graph:
 			# If a adjacent has not been visited, then mark it
 			# visited and enqueue it
 			for ind, val in enumerate(self.graph[u]):
-				info = "Index: " + str(ind) + " Value: " + str(val)
-				print(info)
+				#info = "Index: " + str(ind) + " Value: " + str(val)
+				#print(info)
 				if visited[ind] == False and val > 0:
 					# If we find a connection to the sink node, 
 					# then there is no point in BFS anymore

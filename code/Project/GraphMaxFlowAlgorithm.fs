@@ -16,8 +16,8 @@ let BFS (g: Graph<'a,'b>)(souceID: int) (sinkID: int) (parent: int array): bool 
 
     let mutable result = false
 
-    while (List.length queue > 0) do 
-        printfn "%A" queue
+    while (List.length queue > 0 && (not result)) do 
+        //printfn "Queue: %A" queue
 
         // Pop off first element of queue
         let popID: int = List.head queue
@@ -29,22 +29,31 @@ let BFS (g: Graph<'a,'b>)(souceID: int) (sinkID: int) (parent: int array): bool 
         //printfn "%A" popAdjacentVerticiesIDs
 
         let rec work (vertexList: (int * int) list): bool =  
-            printfn "%A" vertexList
+            //printfn "VextexList: %A" vertexList
             match vertexList with
-            | [] -> false
+            | [] -> 
+                //printfn "MADE IT TO FALSE"
+                false
             | x::xs -> 
                 let index: int  = x |> fst
                 let value: int = x |> snd
-                if (visited.[index] = false) && (value > 0) then
+                //printfn "Index: %A" index
+                //printfn "Value: %A" index
+                if (visited.[index] = false) && (value > 0)  && (index = sinkID)  then
                     queue <- (List.append queue [index])
                     visited.[index] <- true
                     parent.[index] <- popID
-                    printfn "INDEX: %A" index
-                    printfn "sinkID: %A" sinkID
                     true
-                    //if index = sinkID then true else work xs
-                else work xs
+                elif (visited.[index] = false) && (value > 0)then
+                    queue <- (List.append queue [index])
+                    visited.[index] <- true
+                    parent.[index] <- popID
+                    work xs
+                else 
+                    //printfn "ENTERED ELSE"
+                    work xs
 
         result <- work popAdjacentVerticiesIDs 
     
+    printfn "PARENT: %A" parent
     result
