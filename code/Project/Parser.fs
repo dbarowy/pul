@@ -52,10 +52,10 @@ let timeFormat1 =
             ))
             (id)
         )
-        // turn the parsed input into an F# DateTime
+        // Turn the parsed input into an F# DateTime
         (fun (hourNum: int, (hourStr: string, (month: int, (day: int, year: int)))) ->
             let strRepresentation: string = $"{hourNum} {hourStr} {month}/{day}/{year}"
-            //TODO: Make use of the boolean here if this isn't a good date?????
+            // The build in F# DateTime.TryParse function is very forgiving and will still parse most seemingly miscronstructed dates
             DateTime.TryParse(strRepresentation) |> snd
         )
 

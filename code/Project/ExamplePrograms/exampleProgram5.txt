@@ -1,7 +1,12 @@
-Request: Bob to Boston at 5 AM on 1/3/2023
-Offer: Cam to Chicago at 2 AM on 5/22/2023 to 10 AM on 5/24/2023 with 1 seats
-Request: Dan to Denver at 9 PM on 11/27/2023
-Request: Echo to Chicago at 10 AM on 5/22/2023
-Request: Fay to Chicago at 10 AM on 5/22/2023
-Request: Gabe to Arlington, Chicago at 5 AM on 1/1/2023 to 5 AM on 5/22/2023
-Request: Hay to Arlington at 1 AM on 1/1/2023 to 11 PM on 1/9/2023
+Offer: Abe to Arlington at 2 AM on 1/5/2023 to 6 AM on 1/5/2023 with 5 seats
+    Request: GabeOne to Arlington, Chicago at 5 AM on 1/5/2023
+    Request: GabeTwo to Arlington at 2 AM on 1/5/2023
+
+Offer: Cam to Chicago at 2 AM on 1/5/2023 to 6 AM on 1/5/2023 with 2 seat
+    Request: EchoOne to Chicago, Arlington at 2 AM on 1/5/2023
+    Request: EchoTwo to Chicago, Arlington at 3 AM on 1/5/2023
+    Request: EchoThree to Chicago at 4 AM on 1/5/2023
+    Request: EchoFour to Chicago at 5 AM on 1/5/2023
+
+Request: Bob to Boston at 5 AM on 1/5/2023
+Request: Dan to Denver at 5 AM on 1/5/2023

@@ -37,13 +37,10 @@ type TestClass () =
     [<TestMethod>]
     member this.BFSTest1 () = 
         let graph = Graph.empty            
-
         let graph2 = constructGraph graph 3 0
-
         let graph3 = (Graph.addEdge 0 0 1 1 graph2) |> snd
-
         let finalGraph = (Graph.addEdge 0 1 2 2 graph3) |> snd
-
+        
         let parent: int array = Array.init (finalGraph |> fst) (fun i -> -1)
         
         let result = BFS finalGraph 0 2 parent
@@ -77,7 +74,6 @@ type TestClass () =
         let graph4 = (Graph.addEdge 0 0 2 1 graph3) |> snd
         let graph5 = (Graph.addEdge 0 3 5 1 graph4) |> snd
         let graph6 = (Graph.addEdge 0 4 5 1 graph5) |> snd
-
         let finalGraph = (Graph.addEdge 0 2 4 1 graph6) |> snd
 
         let parent: int array = Array.init (finalGraph |> fst) (fun i -> -1)

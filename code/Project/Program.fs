@@ -1,7 +1,8 @@
 ﻿open Evaluator
-open System
 open Parser
 open AST
+
+open System
 
 [<EntryPoint>]
 let main (args: string array) =
