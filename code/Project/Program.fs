@@ -1,6 +1,7 @@
 ﻿open Evaluator
 open System
 open Parser
+open AST
 
 [<EntryPoint>]
 let main (args: string array) =
@@ -22,11 +23,9 @@ let main (args: string array) =
                     exit 1
     
     match parse text with
-    | Some (ast: AST.InputSchedule) ->
-        printfn "\nAST:\n %A" ast // Print AST
-        printfn "\n --------------------------------------------------------------------- \n"
-        let svg = eval ast
-        printfn "EVALUATION:\n %A \n" svg // Print evaluation
+    | Some (ast: InputSchedule) ->
+        let svg: string = eval ast
+        printfn "%s" svg // Print evaluation
         0
     | None ->
         printfn "Error while parsing. Invalid program."

@@ -12,6 +12,7 @@
     <Compile Include="AST.fs" />
     <Compile Include="GraphCreationFunctions.fs" />
     <Compile Include="GraphMaxFlowAlgorithm.fs" />
+    <Compile Include="GraphPrettyPrint.fs" />
     <Compile Include="Evaluator.fs" />
     <Compile Include="Parser.fs" />
     <Compile Include="Program.fs" />

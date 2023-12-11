@@ -22,11 +22,11 @@ let rec locMatchHelper(offerLoc: String)(reqLocs: String List): bool =
 //      4) Event B's date range
 // And returns true if they overlap and false if they do not. Takes advantage of F# DateTime type to calculate differences
 // between times.
-let timeMatchHelper(timeRange1)(timeRange2): bool =
-    let time1start = timeRange1.startTime
-    let time1end = timeRange1.endTime
-    let time2start = timeRange2.startTime
-    let time2end = timeRange2.endTime
+let timeMatchHelper(timeRange1: TimeRange)(timeRange2: TimeRange): bool =
+    let time1start: DateTime = timeRange1.startTime
+    let time1end: DateTime = timeRange1.endTime
+    let time2start: DateTime = timeRange2.startTime
+    let time2end: DateTime = timeRange2.endTime
     (time1start <= time2end) && (time1end >= time2start)
 
 // A function that takes takes an Offer and a Request and returns true of the Offer can fulfill the Request
@@ -35,8 +35,8 @@ let fulfill (offer: Event) (request: Event): bool =
     // Input was an Offer and Request
     | Offer (_,loc1: List<string>,timeRange1: TimeRange,_),Request (_,loc2: List<string>,timeRange2: TimeRange) ->
         // Booleans for whether each field matches
-        let locMatch = locMatchHelper (List.head loc1) loc2
-        let timeMatch = timeMatchHelper timeRange1 timeRange2
+        let locMatch: bool = locMatchHelper (List.head loc1) loc2
+        let timeMatch: bool = timeMatchHelper timeRange1 timeRange2
 
         // Offer fulfills request if ALL fields match
         locMatch && timeMatch
@@ -91,17 +91,17 @@ let rec addSourceToOfferEdges (idSource: int) (offerList: Vertex<Event, int> lis
 // A function which adds an edge with capacity 1 between every request and the provided sink node
 let addRequestToSinkEdges (sinkId: int)  (g: Graph<Event,int>): Graph<Event,int> =
     // Save the list of all verticies
-    let vertexList = g |> snd
-    let rec addOneEdge vertexList graph = 
+    let vertexList: Vertex<Event,int> list = g |> snd
+    let rec addOneEdge (vertexList: ((int * Event) * 'a) list) graph = 
         match vertexList with
         // Base case: no more vertices to add edges between 
         | [] -> graph
         // Inductive step:
         | v::vs -> 
             // Save vertex v's data and Event
-            let vertexData = v |> fst
-            let vertexId = vertexData |> fst
-            let vertexEvent = vertexData |> snd
+            let vertexData: int * Event = v |> fst
+            let vertexId: int = vertexData |> fst
+            let vertexEvent: Event = vertexData |> snd
             // Check if vertext v is an Offer or Request
             match vertexEvent with
             | Offer (_,_,_,_) ->  addOneEdge vs graph // Do nothing
@@ -141,7 +141,7 @@ let rec addRequests (g: Graph<Event,int>) (input: InputSchedule) (offerList: Ver
             // Recursive call
             addRequests (revisedGraph) (xs) (offerList)
 
-let createGraph (input: InputSchedule): Graph<Event,int> =
+let createGraph (input: InputSchedule): Graph<Event,int> * int =
     //printfn "Entered Eval"
     // Construct new empty graph
     let graphEmpty: Graph<'a,'b> = Graph.empty
@@ -152,25 +152,22 @@ let createGraph (input: InputSchedule): Graph<Event,int> =
 
     // Add offer nodes to graph
     let offers: Graph<Event,int> = constructOffersGraph graphSource input
-    //printf "Parsed graph: %A\n\n\n" offers
     let offersList: Vertex<Event,int> list = (snd offers)[0..((snd offers).Length-2)] // Save list of offer nodes only so we can refer to it
-    //printf "Offers:\n %A\n\n\n" offersList
 
     // Add request nodes and appropriate edges to graph
-    let offersAndRequests = addRequests offers input offersList
-    //printf "Parsed graph:\n %A\n\n\n" offersAndRequests
+    let offersAndRequests: Graph<Event,int> = addRequests offers input offersList
 
     // Add edges between source to all offers with weight of the offer's seat capacity
-    let linkedSource = addSourceToOfferEdges 0 offersList offersAndRequests
+    let linkedSource: Graph<Event,int> = addSourceToOfferEdges 0 offersList offersAndRequests
 
     // Create and add sink node
-    let dummySinkOffer = Offer("SINK",["SINK"],{startTime = DateTime(0); endTime = DateTime(0)},-1)
-    let graphSinkData = (Graph.addVertex dummySinkOffer linkedSource)
-    let sinkId = graphSinkData |> fst
-    let sinkGraph = graphSinkData |> snd
+    let dummySinkOffer: Event = Offer("SINK",["SINK"],{startTime = DateTime(0); endTime = DateTime(0)},-1)
+    let graphSinkData: int * Graph<Event,int> = (Graph.addVertex dummySinkOffer linkedSource)
+    let sinkId: int = graphSinkData |> fst
+    let sinkGraph: Graph<Event,int> = graphSinkData |> snd
 
     // Add edges between all requests and sink
-    let completeGraph = addRequestToSinkEdges sinkId sinkGraph
+    let completeGraph: Graph<Event,int> = addRequestToSinkEdges sinkId sinkGraph
 
     // Return complete graph
-    completeGraph
+    (completeGraph,sinkId)
