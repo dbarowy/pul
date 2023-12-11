@@ -97,5 +97,11 @@ let prettyPrint (sinkID: int) (g: Graph<Event,int>) =
     let resultStringUnfilled: string = stringBuilderUnfilled unfilledReqs g
 
     // Piece together the completed output
-    "MATCHED REQUESTS:\n" + resultStringFilled + "\nUNMATCHED REQUESTS:\n" + resultStringUnfilled
-        
+    if (resultStringFilled.Length > 0) && (resultStringUnfilled.Length > 0) then 
+        "MATCHED REQUESTS:\n" + resultStringFilled + "\nUNMATCHED REQUESTS:\n" + resultStringUnfilled
+    elif (resultStringFilled.Length > 0) then
+        "MATCHED REQUESTS:\n" + resultStringFilled
+    elif (resultStringUnfilled.Length > 0) then 
+        "\nUNMATCHED REQUESTS:\n" + resultStringUnfilled
+    else // Weird edge case of an input with only offers
+        ""

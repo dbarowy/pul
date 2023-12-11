@@ -1,1 +1,4 @@
-Offer: Abe to Arlington at 2 AM on 1/5/2023 to 6 AM on 1/5/2023 with 2 seats
+Offer: Jacob to NYC at 2 PM on 11/5/2023 to 4 PM on 11/6/2023 with 3 seats
+Offer: Jack to Boston at 12 PM on 11/26/2023 with 1 seat
+Request: Cooper to Boston at 12 PM on 11/26/2023
+Request: Oscar to NYC at 9 AM on 11/5/2023 to 5 PM on 11/5/2023

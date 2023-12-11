@@ -142,7 +142,6 @@ let rec addRequests (g: Graph<Event,int>) (input: InputSchedule) (offerList: Ver
             addRequests (revisedGraph) (xs) (offerList)
 
 let createGraph (input: InputSchedule): Graph<Event,int> * int =
-    //printfn "Entered Eval"
     // Construct new empty graph
     let graphEmpty: Graph<'a,'b> = Graph.empty
 

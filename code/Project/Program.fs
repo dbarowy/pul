@@ -22,7 +22,7 @@ let main (args: string array) =
             // Error can't open file
             |_ ->   printfn "Error: Can't open provided file path" 
                     exit 1
-    
+
     match parse text with
     | Some (ast: InputSchedule) ->
         let svg: string = eval ast
