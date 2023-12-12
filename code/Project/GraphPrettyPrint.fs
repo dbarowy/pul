@@ -55,9 +55,9 @@ let timeRangeString (timeRange: TimeRange) =
 let eventString (e: Event) =
     match e with
     | Offer(name: string,locList: List<string>, timeRange: TimeRange,_) ->
-        $"Offer: {name} to {locationListString locList} {timeRangeString timeRange}"
+        $"{name} to {locationListString locList} {timeRangeString timeRange}"
     | Request(name: string,locList: List<string>, timeRange: TimeRange) ->
-        $"Request: {name} to {locationListString locList} {timeRangeString timeRange}"
+        $"{name} to {locationListString locList} {timeRangeString timeRange}"
 
 let prettyPrint (sinkID: int) (g: Graph<Event,int>) =
     // Get an array of unfilled request IDs
@@ -68,7 +68,7 @@ let prettyPrint (sinkID: int) (g: Graph<Event,int>) =
     
     // Get an array of offer IDs that fill the request IDs above in order
     let curriedMapRequestIDtoOfferID = mapRequestIDtoOfferID g
-    let offersForReqs: int list = List.map (fun x -> curriedMapRequestIDtoOfferID x) filledReqs
+    let offersForReqs: int list = List.map (fun (x: int) -> curriedMapRequestIDtoOfferID x) filledReqs
 
     // Build formatted filled requests
     let rec stringBuilderFilled (offerIDs: int list) (requestIDs: int list) (g: Graph<Event,'c>) =
@@ -78,7 +78,7 @@ let prettyPrint (sinkID: int) (g: Graph<Event,int>) =
         | offerID::os,requestID::rs  ->
             let offer: Event = (getVertex offerID g) |> vertexData
             let request: Event = (getVertex requestID g) |> vertexData
-            let newLine: string = $"\t{eventString offer} filled by {eventString request}"
+            let newLine: string = $"\t{eventString offer} -> {eventString request}"
             newLine + "\n" + (stringBuilderFilled os rs g)
 
     // Build formatted unfilled requests

@@ -1,1 +1,12 @@
-Offer: Abe to Arlington at 2 AM on 1/5/2023 to 6 AM on 1/5/2023 with 2 seats
+Offer: Cam to Chicago at 2 AM on 1/5/2023 to 6 AM on 1/5/2023 with 2 seat
+    Request: EchoOne to Chicago, Arlington at 2 AM on 1/5/2023
+    Request: EchoTwo to Chicago, Arlington at 3 AM on 1/5/2023
+    Request: EchoThree to Chicago at 4 AM on 1/5/2023
+    Request: EchoFour to Chicago at 5 AM on 1/5/2023
+
+Offer: Abe to Arlington at 2 AM on 1/5/2023 to 6 AM on 1/5/2023 with 5 seats
+    Request: GabeOne to Arlington at 5 AM on 1/5/2023
+    Request: GabeTwo to Arlington at 2 AM on 1/5/2023
+
+Request: Bob to Boston at 5 AM on 1/5/2023
+Request: Dan to Denver at 5 AM on 1/5/2023
