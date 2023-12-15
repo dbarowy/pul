@@ -150,13 +150,13 @@ type TestClass () =
         let result = eval input
         let expectedResult = 
             "MATCHED REQUESTS:\n" +
-            "\tRequest: Echo to Chicago at 10 AM on 5/22/2023 filled by Offer: Cam to Chicago at 2 AM on 5/22/2023 to 10 AM on 5/24/2023\n" +
-            "\tRequest: Fay to Chicago at 10 AM on 5/22/2023 filled by Offer: Cam to Chicago at 2 AM on 5/22/2023 to 10 AM on 5/24/2023\n" +
-            "\tRequest: Gabe to Arlington, Chicago at 5 AM on 1/1/2023 to 5 AM on 5/22/2023 filled by Offer: Abe to Arlington at 2 AM on 1/5/2023 to 6 AM on 1/5/2023\n" +
-            "\tRequest: Hay to Arlington at 1 AM on 1/1/2023 to 11 PM on 1/9/2023 filled by Offer: Abe to Arlington at 2 AM on 1/5/2023 to 6 AM on 1/5/2023\n\n" +
+            "\tEcho to Chicago at 10 AM on 5/22/2023 -> Cam to Chicago at 2 AM on 5/22/2023 to 10 AM on 5/24/2023\n" +
+            "\tFay to Chicago at 10 AM on 5/22/2023 -> Cam to Chicago at 2 AM on 5/22/2023 to 10 AM on 5/24/2023\n" +
+            "\tGabe to Arlington, Chicago at 5 AM on 1/1/2023 to 5 AM on 5/22/2023 -> Abe to Arlington at 2 AM on 1/5/2023 to 6 AM on 1/5/2023\n" +
+            "\tHay to Arlington at 1 AM on 1/1/2023 to 11 PM on 1/9/2023 -> Abe to Arlington at 2 AM on 1/5/2023 to 6 AM on 1/5/2023\n\n" +
             "UNMATCHED REQUESTS:\n" +
-            "\tRequest: Bob to Boston at 5 AM on 1/3/2023\n" +
-            "\tRequest: Dan to Denver at 9 PM on 11/27/2023\n"
+            "\tBob to Boston at 5 AM on 1/3/2023\n" +
+            "\tDan to Denver at 9 PM on 11/27/2023\n"
         match (result = expectedResult) with
         | true   ->  Assert.IsTrue true
         | false  ->  Assert.IsTrue false
